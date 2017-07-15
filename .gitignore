@@ -1,4 +1,7 @@
 source_data/
+derby.log
+metastore_db/
+.ipynb_checkpoints/
 
 # Created by https://www.gitignore.io/api/macos
 
