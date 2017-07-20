@@ -69,4 +69,4 @@ For example, if you wanted to make a prediction using the K-Nearest Neighbor Mod
 ./predict-destination.py knn "2017-05-29 18:23:27" 32.989318 -97.263840
 ```
 ***
-#### And that's all. Enjoy it the code! Feedback is welcome ;-)
+#### And that's all. Enjoy the code! Feedback is welcome ;-)
