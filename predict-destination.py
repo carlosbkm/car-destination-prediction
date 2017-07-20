@@ -9,27 +9,49 @@ import numpy as np
 from sklearn.externals import joblib
 
 import geohash
+import argparse
 
-g = 6 #geohash length, a 1.2km x 609.4m square area
-b = 48 # number of time bins per day
+g = 9 #geohash length, a 1.2km x 609.4m square area
+b = 12 # number of time bins per day
 
 def main(argv):
-    startTime = argv[0]
-    startLat = argv[1]
-    startLon = argv[2]
+    
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("model",  action="store", choices=["forest", "knn"], help = "Predictive model to use, can be either forest or knn")
+    parser.add_argument("time", action="store", help = 'Start trip time, with the format "yyyy-MM-dd HH:mm:ss". It must be between quotation marks. For instance, you coud use: "2017-05-24 12:26:37"')
+    parser.add_argument("latitude",action="store", type=float, help = "Latitude of the trip start position. For instance, you could use: 47.409291")
+    parser.add_argument("longitude",action="store", type=float, help = "Longitude of the trip end position. For instance, you could use: 8.546942")
+    args = parser.parse_args()
+    model = args.model
+    startTime = args.time
+    startLat = args.latitude
+    startLon = args.longitude
+    model_file = None
+
+    if (model == "forest"):
+        print("Model used: Random Forest")
+        model_file = 'random_forest_model.pkl'
+    elif (model == "knn"):
+        print("Model used: K-Nearest Neighbor")
+        model_file = 'k_nearest_model.pkl'
 
     # Note: b must evenly divide 60
     minutes_per_bin = int((24 / float(b)) * 60)
 
-    regressor = joblib.load('trained_model.pkl')
-    regressor.set_params(verbose=False)
+    regressor = joblib.load(model_file)
+    #regressor.set_params(verbose=False)
+
     # Regressor needs the follwing parameters: time_num, time_sin, time_cos, day_num, start_lat, start_lon
 
-    location = bucketed_location(startLat, startLon)
-    print("Bucketed location: ", location)
+    startLat = float(startLat)
+    startLon = float(startLon)
+    x_start = math.cos(startLat) * math.cos(startLon)
+    y_start = math.cos(startLat) * math.sin(startLon) 
+    z_start = math.sin(startLat) 
 
     zippedFeatures = date_extractor(startTime, b, minutes_per_bin)
-    parameters = np.array((zippedFeatures[4], zippedFeatures[6], zippedFeatures[5], zippedFeatures[8], location[0], location[1])).reshape(1, -1)
+    parameters = np.array((zippedFeatures[8], x_start, y_start, z_start)).reshape(1, -1)
     prediction = regressor.predict(parameters)
     print("\nPrediction: {0}, {1}".format(prediction[0][0], prediction[0][1]))
 
